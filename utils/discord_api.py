@@ -1,30 +1,11 @@
 import os
-
-import discord
+from discord import Webhook, RequestsWebhookAdapter
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+HOOK_URL = os.getenv('WEBHOOK_URL')
 
-client = discord.Client()
-ready = False
+webhook = Webhook.from_url(HOOK_URL, adapter=RequestsWebhookAdapter()) # Initializing webhook
 
-@client.event
-async def on_ready():
-    ready = True
-    print(f'{client.user} has connected to Discord!')
-
-@client.event
-async def on_trade(msg):
-    if ready:
-        guild = client.guilds[0]
-        for chan in guild.channels:
-            # Looking for trade-alerts channel
-            if 'trade' in str(chan):
-                await chan.send(msg)
-                return
-    else:
-        print('Client not ready')
-
-client.dispatch('trade', 'Dispatched an event and mmsg')
-client.run(TOKEN)
+def notify_discord(msg):
+    webhook.send(msg)
