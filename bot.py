@@ -7,6 +7,7 @@ from sympy import false, true
 
 from strategies.zeno import ZenoStrategy
 from utils.dydx import setup_dydx, go_long, check_if_pending
+from utils.discord_api import notify_discord
 
 
 process_throttle_secs = 30
@@ -31,4 +32,7 @@ def start_bot(dydx_client, strategy):
 if __name__ == "__main__":
     client = setup_dydx()
     strat = ZenoStrategy(client, consts.MARKET_ETH_USD)
-    start_bot(client, strat)
+    try:
+        start_bot(client, strat)
+    except Exception as e:
+        notify_discord(e)
