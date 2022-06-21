@@ -56,15 +56,16 @@ def go_long(client, amount, stop_loss, roi):
     buy_price = market_buy_order['order']['price']
 
     # Also make a stop loss order
+    stop_limit_price = '%.1f' % (float(buy_price) * (1 - (stop_loss/100)))
     stoploss_order = client.private.create_order(
         position_id=position_id,
         market=consts.MARKET_ETH_USD,
         side=consts.ORDER_SIDE_SELL,
-        order_type=consts.ORDER_TYPE_TRAILING_STOP,
+        order_type=consts.ORDER_TYPE_STOP,
         post_only=False,
         size=str(amount),
-        price="1",  # Dunno what to do here
-        trailing_percent='-%f' % stop_loss,  # NEed to switch back to triggerPrice
+        price=stop_limit_price,
+        trigger_price=stop_limit_price,
         limit_fee='0.015',
         expiration_epoch_seconds=time.time() + 15000,
     ).data
