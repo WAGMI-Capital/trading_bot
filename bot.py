@@ -29,6 +29,7 @@ def start_bot(dydx_client, strategy):
             current_orders = go_long(
                 dydx_client, amount=3.5, stop_loss=1, roi=1)
             notify_discord("Going long!")
+            notify_discord(current_orders)
 
 if __name__ == "__main__":
     client = setup_dydx()
