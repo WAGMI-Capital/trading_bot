@@ -3,10 +3,10 @@
 
 import time
 import dydx3.constants as consts
-from sympy import false, true
+import traceback
 
-from strategies.zeno import ZenoStrategy
-from utils.dydx import setup_dydx, go_long, check_if_pending
+from strategies.zeno import Zeno
+from utils.dydx import setup_dydx, go_long, check_if_pending, go_short
 from utils.discord_api import notify_discord
 
 
@@ -24,17 +24,29 @@ def start_bot(dydx_client, strategy):
         # We can reset order here
         current_orders = {}
 
+        # Get market data and analyze it
+        strategy.crunch_data()
+
         # Run our strategy
         if (strategy.should_long()):
             current_orders = go_long(
                 dydx_client, amount=3.5, stop_loss=1, roi=1)
             notify_discord("Going long!")
             notify_discord(current_orders)
+            continue
+        
+        if (strategy.should_short()):
+            current_orders = go_short(
+                dydx_client, amount=3.5, stop_loss=1, roi=1)
+            notify_discord("Going short!")
+            notify_discord(current_orders)
+            continue
 
 if __name__ == "__main__":
     client = setup_dydx()
-    strat = ZenoStrategy(client, consts.MARKET_ETH_USD)
+    strat = Zeno(client, consts.MARKET_ETH_USD)
     try:
         start_bot(client, strat)
-    except Exception as e:
-        notify_discord(e)
+    except Exception:
+        traceback.print_exc()
+        notify_discord(traceback.format_exc())
