@@ -16,9 +16,14 @@ class TestGoShort(unittest.TestCase):
             self.position['market_buy_order']['order']['id']).data
         self.assertNotEqual(
             market_sell_order['order']['status'], consts.ORDER_STATUS_CANCELED)
+        self.assertEqual(
+            market_sell_order['order']['status'], consts.ORDER_STATUS_FILLED)
+    
+    # TODO: Add tests for stop limit and tak eprofit orders
 
     def tearDown(self) -> None:
         try:
+            # TODO: Cancelling is not enough. You need to close positions too
             self.client.private.cancel_order(
                     order_id=self.position['stop_loss_order']['order']['id'])
             self.client.private.cancel_order(
