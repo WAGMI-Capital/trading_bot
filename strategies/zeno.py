@@ -62,11 +62,7 @@ class Zeno(Strategy):
         last_candle_confirmation = self.price_confirmation.iloc[-1]
 
         if(last_candle_primary['SMA50'] > last_candle_primary['Upper Band'] and last_candle_primary['signal_line'] < macd_mean-1*macd_dev):
-
-            if(last_candle_confirmation['SMA50'] < float(last_candle_confirmation['close'])):
-                return True
-            else:
-                return False
+            return bool(last_candle_confirmation['SMA50'] < float(last_candle_confirmation['close']))
         else:
             return False
     
@@ -78,9 +74,6 @@ class Zeno(Strategy):
         last_candle_confirmation = self.price_confirmation.iloc[-1]
     
         if(last_candle_primary['SMA50'] < last_candle_primary['Lower Band'] and last_candle_primary['signal_line'] > macd_mean + 1 * macd_dev):        
-            if(last_candle_confirmation['SMA50'] > last_candle_confirmation['Close']):
-                return True
-            else:
-                return False
+            return bool(last_candle_confirmation['SMA50'] > float(last_candle_confirmation['close']))
         else:
             return False
