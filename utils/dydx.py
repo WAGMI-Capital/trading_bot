@@ -94,6 +94,70 @@ def go_long(client, amount, stop_loss, roi):
         "take_profit_order": take_profit_order
     }
 
+def get_stop_limit_price(sell_price, stop_loss):
+    return float(sell_price) * (1 + (stop_loss/100))
+
+def go_short(client, amount, stop_loss, roi):
+    # Get our position ID.
+    account_response = client.private.get_account()
+    position_id = account_response.data['account']['positionId']
+
+    # TODO: Market should be an argument.
+    eth_market = client.public.get_markets(market=consts.MARKET_ETH_USD)
+    sell_price = eth_market.data['markets']['ETH-USD']['indexPrice']
+    slippage: float = 2.0
+
+    # Make a market sell order
+    order_params = {
+        'position_id': position_id,
+        'market': consts.MARKET_ETH_USD,
+        'side': consts.ORDER_SIDE_SELL,
+        'order_type': consts.ORDER_TYPE_MARKET,
+        'post_only': False,
+        'size': str(amount),
+        'price': '%.1f' % (float(sell_price) - slippage),  # Lowest possible sell price with slippage included 
+        'expiration_epoch_seconds': time.time() + 15000,
+        'time_in_force': consts.TIME_IN_FORCE_FOK,
+        'limit_fee': '0.015',
+    }
+    market_sell_order = client.private.create_order(**order_params).data
+
+    # Also make a stop loss order
+    stop_limit_price = '%.1f' % (get_stop_limit_price(sell_price, stop_loss))
+    stoploss_order = client.private.create_order(
+        position_id=position_id,
+        market=consts.MARKET_ETH_USD,
+        side=consts.ORDER_SIDE_BUY,
+        order_type=consts.ORDER_TYPE_STOP,
+        post_only=False,
+        size=str(amount),
+        price=stop_limit_price,
+        trigger_price=stop_limit_price,
+        limit_fee='0.015',
+        expiration_epoch_seconds=time.time() + 15000,
+    ).data
+
+    take_profit_price = '%.1f' % (float(sell_price) * (1 - (roi/100)))
+    trigger_profit_price = '%.1f' % (float(sell_price) * (1 - (roi/200)))
+    # Also make a take-profit order
+    take_profit_order = client.private.create_order(
+        position_id=position_id,
+        market=consts.MARKET_ETH_USD,
+        side=consts.ORDER_SIDE_BUY,
+        order_type=consts.ORDER_TYPE_TAKE_PROFIT,
+        post_only=False,
+        size=str(amount),
+        price=take_profit_price,
+        trigger_price=trigger_profit_price,
+        limit_fee='0.015',
+        expiration_epoch_seconds=time.time() + 15000,
+    ).data
+
+    return {
+        "market_buy_order": market_sell_order,
+        "stop_loss_order": stoploss_order,
+        "take_profit_order": take_profit_order
+    }
 
 def check_if_pending(orders, dydx_client):
     # GEt current active orders
@@ -161,24 +225,8 @@ def check_if_pending(orders, dydx_client):
             order_id=orders['take_profit_order']['order']['id'])
         return False
 
-# def go_short(dydx_client):
-#     # Get our position ID.
-#     account_response = dydx_client.private.get_account()
-#     position_id = account_response['data']['account']['positionId']
-#     order_params = {
-#                 'position_id': position_id,
-#                 'market': consts.MARKET_ETH_USD,
-#                 'side': consts.ORDER_SIDE_BUY,
-#                 'order_type': consts.ORDER_TYPE_MARKET,
-#                 'post_only': False,
-#                 'size': '0.0001',
-#                 # 'price': '20',
-#                 'limit_fee': '0.0015',
-#                 'expiration_epoch_seconds': time.time() + 15000,
-#                 }
-#     order_response = dydx_client.private.create_order(**order_params)
-#     return order_response
+
 
 if __name__ == "__main__":
     client = setup_dydx()
-    go_long(client, amount=0.01, stop_loss=1, roi=1)
+    go_short(client, amount=0.01, stop_loss=1, roi=1)
