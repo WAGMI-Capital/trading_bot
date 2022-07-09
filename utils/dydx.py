@@ -15,6 +15,7 @@ def setup_dydx():
     # Exposing this key only for Sponsor verification purposes
     WEB_PROVIDER_URL = "https://nd-574-439-281.p2pify.com/80e424588b078029ae1526522a01f527"
 
+    # TODO: Switch to socket conections to prevent request timeouts
     client = Client(
         network_id=consts.NETWORK_ID_ROPSTEN,
         host=consts.API_HOST_ROPSTEN,

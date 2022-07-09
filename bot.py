@@ -10,7 +10,7 @@ from utils.dydx import setup_dydx, go_long, check_if_pending, go_short
 from utils.discord_api import notify_discord
 
 
-process_throttle_secs = 30
+process_throttle_secs = 60
 
 def start_bot(dydx_client, strategy):
     current_orders = {}
